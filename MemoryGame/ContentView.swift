@@ -1,61 +1,40 @@
-//
-//  ContentView.swift
-//  MemoryGame
-//
-//  Created by student on 22/10/2024.
-//
-
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    // Lista ikon bazowych
+    let baseIcons = ["🥷", "🥼", "🙉", "🏀", "🤿", "♌️", "❤️‍🩹", "🦊"]
+    var icons: [String] = [] // Przechowujemy ikonki do wyświetlenia
+
+    init() {
+        // Losujemy osiem par ikon (16 kart)
+        let selectedIcons = Array(baseIcons.shuffled().prefix(8)) // Losuj 8 unikalnych ikon
+        icons = selectedIcons + selectedIcons // Tworzymy 16 kart (8 par)
+        icons.shuffle() // Mieszamy ikonki, aby były losowo rozmieszczone
+        print(icons) // Debugowanie - wyświetli ikony w konsoli
+    }
+    
+    // Definiujemy kolumny dla siatki
+    let columns = [
+        GridItem(.flexible()), // Elastyczne kolumny
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+        ScrollView { // Dodajemy ScrollView dla obsługi większej ilości elementów
+            LazyVGrid(columns: columns, spacing: 20) { // Używamy LazyVGrid
+                ForEach(icons, id: \.self) { icon in
+                    CardView(icon: icon) // Tworzymy CardView dla każdej ikony
                 }
             }
-        } detail: {
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+            .padding() // Padding dla całej siatki
         }
     }
 }
 
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }
